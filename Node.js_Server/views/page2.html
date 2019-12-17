@@ -1,0 +1,164 @@
+<!doctype html>
+      <html>
+      <head>
+        <title>한이음 항만서버</title>
+        <meta charset="utf-8">
+        <style type = "text/css">
+        body{background-color:#1b2d3d;color:#fff;font-size:20px}
+        black{color:black}
+        </style>
+        
+        <script src = "jquery-1.12.4.min.js"></script>
+        <script src = "socket.io.js"></script>
+        <script type ="text/javascript">
+        function num1(){
+        
+         
+          
+          var tag1 = "심장박동 : 120.. 정상"
+          var tag2 = "위험구역 : <>"
+          document.getElementById("base1").innerHTML = tag1 + ab_data;
+          document.getElementById("base2").innerHTML = tag2;  
+          
+        }
+        function num2(){
+          var tag1 = "심장박동 : " 
+          var tag2 = "위험구역 : "
+
+          document.getElementById("base1").innerHTML = tag1 + ab_data;
+          document.getElementById("base2").innerHTML = tag2;
+        }
+        
+        </script>
+      </head>
+      <body>
+        <h1>메인화면</h1>
+        <form id = "frm" name="frm" action="/login__user" method="post">
+            <label for="user_gps"> GPS  </label>
+            <input type="text" id="user_gps" name="user_gps">
+            <label for="user_fg"> FG  </label>
+            <input type="text" id="user_fg" name="user_fg">
+            <label for="user_hg"> HG  </label>
+            <input type="text" id="user_hg" name="user_hg">
+            <label for="user_hb"> HB  </label>
+            <input type="text" id="user_hb" name="user_hb">
+            <input type="submit" value="전송">     
+        </form>
+        <table border = 4 bordercolor ="black" bgcolor = "gray">
+            <tr>
+              <th>GPS MAP</th>
+            </tr>
+            <tr>
+              <td>
+                  <div id="map" style = "width:1500px;height:700px"></div>
+                  <script type = "text/javascript" src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=bc0f3bd5d3e6b78819b25e2d288b763a"></script>
+                  <script>
+                      var img = document.createElement('img');
+                        img.id = 'overlayImg';
+                        img.src = '/map2.png';
+                        img.width = '1500';
+                        img.height = '700';
+
+                      var container = document.getElementById('map');
+                      var options = {
+                        center: new kakao.maps.LatLng(35.50649874223624, 129.38583557348474), // 이걸 초기값으로 사용함
+                        level: 2,
+                        draggable: false
+                      };
+                  
+                      var map = new kakao.maps.Map(container, options);
+                      
+
+                      new kakao.maps.CustomOverlay({
+                        map: map,
+                        position: new kakao.maps.LatLng(35.50649874223624, 129.38583557348474),
+                        content: img
+                        });
+
+                        
+
+                      var positions = [
+                        {
+                        title: '1번 작업자', 
+                        latlng: new kakao.maps.LatLng(35.50659874223424, 129.38583557348474)
+                        },
+                        {
+                        title: '2번 작업자', 
+                        latlng: new kakao.maps.LatLng(35.50639874223724, 129.38583557348474)
+                        },
+                        {
+                        title: '3번 작업자', 
+                        latlng: new kakao.maps.LatLng(35.50649874223624, 129.38593657348474)
+                        },
+                        {
+                        title: '4번 작업자',
+                        latlng: new kakao.maps.LatLng(35.50649874223624, 129.38573457348474)
+                        }
+                        ];
+
+                      var imageSrc = 'http://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png', 
+                        imageSize = new kakao.maps.Size(10, 10);
+
+                        for(var i = 0; i < positions.length; i++){
+                        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+                        var marker = new kakao.maps.Marker({
+                        map: map,
+                        position: positions[i].latlng,
+                        title: positions[i].title,
+                        image: markerImage
+                        });
+                        }
+                  
+                      function setDraggable(draggable) {
+                        map.setDraggable(draggable);    
+                      }
+                    </script>
+                    <div>
+                  <input type = "button" value = "지도 드래그 이동 끄기" onclick="setDraggable(false)">
+                  <input type = "button" value = "지도 드래그 이동 켜기" onclick="setDraggable(true)">
+                  </div>
+              </td>
+            </tr>
+            </table>
+          
+            <div style="position: absolute; right: 50px; bottom: 180px; clear: both">
+              <black>
+                <table border = 4 bordercolor ="black" bgcolor = "white" width = "300px">
+                <tr>
+                  <th>작업자 목록</th>
+                </tr>
+                <tr height = "300px">
+                  <td>  
+              <input type = "button" value = "1번 작업자" onclick = "num1()"><br>
+              <input type = "button" value = "2번 작업자" onclick = "num2()"><br>
+            </td>
+                </tr>
+                <tr>
+                  <th>작업자 정보</th>
+                </tr>
+                <tr height = "300px">
+                  <td>
+                    <div id = "base1">심장박동</div>
+                    <div id = "base2">위험구역</div>
+                  </td>
+                </tr>
+                </table>
+                </black>
+              </div>
+              <script>
+                  $(() => {
+                    const socket = io();
+                    $('form').submit(() => {
+                      socket.emit('chat message', $('#m').val());
+                      $('#m').val('');
+                      return false;
+                    });
+                    socket.on('chat message', (msg) => {
+                      $('#messages').append($('<li>').text(msg));
+                        console.log(msg);
+                    });
+                  });
+                </script>
+                
+      </body>
+      </html>

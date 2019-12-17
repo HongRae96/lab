@@ -1,0 +1,58 @@
+<script>
+var msg; // 소켓으로 받는 변수
+var socket = io();
+var a,b,c,d,e,f;
+socket.on('data1',function(msg){  //SOCKET으로 자바스크립트 다 묶음
+      console.log(msg)
+      console.log(Array(1));               // 넘버로 객체
+                     // 넘버로 객체
+
+    var w = new Number(msg.w);//위도
+    var k = new Number(msg.k);//경도
+    var hg = new Number(msg.hg);//유해가스
+    var fg = new Number(msg.fg);//가연성가스
+    
+    var hb = new Number(msg.hb);//심박수
+    var com = new Number(msg.com);//심박수
+     a=w;
+     b=k;
+     c=hg;
+     d=fg;  
+     e=hb;
+     f=com;
+    // console.log("fdata = "+f)
+     
+        
+    });
+    socket.emit('data2',{state,state2});
+     //console.log("state = " + state)
+   //  console.log("state2 = " + state2)
+
+var positions = [{  //작업자 정보 객체
+    title: 1,   // 작업자 번호
+    latlng: new kakao.maps.LatLng(37.5504050,127.0733374),   // w, k
+    HeartBeat: 87,     // hb
+    harmGas: c,       // hg
+    bunningGas: 1000000 ,   // fg
+    com: f
+    }/*,
+    {
+    title: 2, 
+    latlng: new kakao.maps.LatLng(35.50639874223624, 129.38583557348474),
+    HeartBeat: '150',
+    area: '유해가스'
+    },
+    {
+    title: 3, 
+    latlng: new kakao.maps.LatLng(35.50649874223624, 129.38593657348474),
+    HeartBeat: '120',
+    area: '유해가스'
+    },
+    {
+    title: 4,
+    latlng: new kakao.maps.LatLng(35.50649874223624, 129.38573457348474),
+    HeartBeat: '100',
+    area: '유해가스'
+    }*/];
+
+    </script>

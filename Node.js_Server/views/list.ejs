@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <table border="2">
+      <tr>
+        <th>발생번호</th>
+        <th>작업자번호</th>
+        <th>위도</th>
+        <th>경도</th>
+        <th>유해가스농도</th>
+        <th>가연성가스농도</th>
+        <th>심박수</th>
+        <th>발생시간</th>
+      </tr>
+      <%
+      for(var i = 0; i<rows.length; i++)
+      {
+      %>
+      <tr>
+        <td><%=rows[i].nb%></td>
+        <td><%=rows[i].worker%></td>
+        <td><%=rows[i].latitude%></td>
+        <td><%=rows[i].longitude%></td>
+        <td><%=rows[i].hg%></td>
+        <td><%=rows[i].fg%></td>
+        <td><%=rows[i].hb%></td>
+        <td><%=rows[i].time%></td>
+      </tr>
+      <%
+      }
+      %>
+
+    </table>
+  </body>
+</html>

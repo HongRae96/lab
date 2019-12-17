@@ -1,0 +1,342 @@
+<!doctype html>
+    <html>
+     <head>
+       <link href="./style.css" rel="stylesheet" type="text/css">
+       <title>한이음 항만서버</title>
+       <meta charset="utf-8">
+     </head>
+     <body>
+        <script type = "text/javascript" src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=bc0f3bd5d3e6b78819b25e2d288b763a"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+          var state2 = 0; //서버로 보낼 비상대피 상태
+          var em=0;
+          var click_id;
+          var click = false;
+
+          //작업자 정보 변경 함수
+        function num(i){
+                   click = true;
+                   click_id = i;
+                   document.getElementById("base1").innerHTML = '심장박동: ' + positions[i].HeartBeat + ' bpm';
+                   document.getElementById("base2").innerHTML = '위험구역: ' + wanning[i].title + ' 지역';
+                   document.getElementById("base3").innerHTML = '통신상태: ' + com[i];
+                  };
+
+                  
+                  
+                  //시간 출력 함수
+                  function clock(){
+                    var date = new Date();
+                    var month = date.getMonth();
+                    var clockDate = date.getDate();
+                    var day = date.getDay();
+                    var week = ['일','월','화','수','목','금','토'];
+                    var hours = date.getHours();
+                    var minutes = date.getMinutes();
+                    var seconds = date.getSeconds();
+                    document.getElementById("day").innerHTML = `${month+1 < 10 ? `0${month+1}` : month+1}-${clockDate < 10 ? `0${clockDate}` : clockDate} (${week[day]}) `;
+                    document.getElementById("clock").innerHTML = `${hours < 10 ? `0${hours}` : hours}:${minutes <  10 ? `0${minutes}` : minutes }:${seconds < 10 ? `0${seconds}` : seconds}`;
+                  };
+
+                  //비상대피 버튼 클릭 함수
+                  function emergency(){
+                    em=1;
+                    state2 = 1;
+
+                    //10초 뒤에 원상복구
+                    // setTimeout(function(){
+                    //   state2 = 0;
+                    //   $("#myModal").css({
+                    //     "display": "none"
+                    //   });
+                    // }, 20000);
+                  }
+
+                  $(document).ready(function(){
+                    $("#close").click(function(){
+                      $("#myModal").fadeOut();
+                      state2 = 0;
+                    });
+                  });
+        </script>
+       <div class="top">
+          <a>항만 작업자 안전 현황판</a>
+          <hr/>
+      </div>
+
+      <div id="map" class="map"></div>
+
+            <script>
+              var hg=0;
+              var fg=0;
+              var hb=0;
+              var n=0;
+                var container = document.getElementById('map');
+
+                //맵 옵션
+                var mapoptions = {   
+                  center: new kakao.maps.LatLng(37.5504050, 127.0733374),   //중심좌표
+                  level: 1,   //생성 시 지도 레벨
+                  maxLevel: 1,  //최고 확대 레벨
+                  zoomable: false // 줌 불가
+                };
+            
+                var map = new kakao.maps.Map(container, mapoptions);   //맵 생성
+
+                //작업자 마커 설정
+                var imageSrc = 'https://cache-igetweb-v2.mt108.info/uploads/2301/filemanager/32c9eabd2bcc35b14b8b3474857ed908.png'
+                    imageSize = new kakao.maps.Size(30, 30);
+
+                //응급 마커 설정
+                var imageEmergency = 'https://cdn.pixabay.com/photo/2015/11/12/13/33/first-aid-1040283_960_720.png'
+                    EmergencySize = new kakao.maps.Size(40, 40);
+
+                var marker = [];  //작업자 마커 배열
+                var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);  //작업자 마커 생성
+                var Emergency = new kakao.maps.MarkerImage(imageEmergency, EmergencySize);  //응급 마커 생성
+
+                //응급 인포윈도우 설정
+                var iwPosition = new kakao.maps.LatLng(37.2143470, 126.9801829);
+
+                //응급 인포윈도우 생성
+                var infowindow = new kakao.maps.InfoWindow({
+                    position: iwPosition,
+                    content: '<div style="background:red;color:white;width:200px;height:50px;font-size:30px;font-weight: bold;text-align:center;padding:4px 0;">위급상태!</div>'
+                });
+                
+                var harmCircle = [];  //유해가스 구역 배열
+                var bunningCircle = []; //가연성가스 구역 배열
+                var newCircle = []; //수동설정 구역 배열
+
+                var wanning = []; //작업자 위험 상태 배열
+
+                //응급 사운드 생성
+                var EmergencyAudio = new Audio();
+                EmergencyAudio.src = "./삐.mp3"
+
+                var com = [];
+
+                var state = 0;  //서버로 보낼 상태변수
+                 </script>
+
+                 <div id="data"></div>
+                 <div id="new"></div>
+
+                 <script>
+                   //마우스 우클릭시 이벤트 발생 함수
+            kakao.maps.event.addListener(map, 'rightclick', function(mouseEvent){
+              var mouselatlng = mouseEvent.latLng;
+              var UP = confirm('위험구역을 생성하시겠습니까?');
+
+              if(UP){
+                var name;
+                name = prompt('위험 종류를 입력하세요.');
+                if(name){
+                var x = 0
+                x = prompt('범위를 입력해주세요. (단위: m)');
+                if(x){
+                  var t = 0;
+                  t = prompt('지속시간을 입력해주세요. (단위: 분), 계속 지속되고 싶으면 0을 입력하세요.');
+                  New_Area(x, mouselatlng, t, name);
+                  n=1;
+                }
+              }
+            }
+            });
+                 </script>
+                 
+                 <!--시간 출력 창 생성-->
+                 <div class="timecard">
+                 <p id = "day">00:00</p>
+                 <hr width="100%" color="white"/>
+                 <p id = "clock">00:00</p>
+                 </div>
+
+                 <script>
+                   //시간 출력 함수 1초마다 불러오기
+                   $(document).ready(function(){
+                    setInterval("clock()", 1000);
+                   });
+                 </script>
+
+                 <!--작업자 정보창 생성-->
+                 <div class=info>
+               <p class=font>작업자 정보</p>
+                <hr/>
+               <table class='table'>
+                 <tr>
+                   <th scope="row" class="type1"><p class=font>목록</p></th>
+                   <td>
+                     <input type = "button" class = "worker" id = "0" value = "1번 작업자" onclick = "num(this.id)"><br>
+                    </td>
+               </tr>
+               <tr>
+                 <th scope="row"><p class=font>정보</p></th>
+                 <td class="type1">
+                   <div id = "base1">작업자 정보 표시</div>
+                   <div id = "base2">(위의 작업자 번호를 클릭하시오)</div>
+                   <div id = "base3"></div>
+                   </td>
+               </tr>
+               </table>
+              </div>
+            </div>
+
+            <!--화면 내 이미지 설명 창 생성-->
+            <div class=infocard>
+            <img class=infoimg src="https://cache-igetweb-v2.mt108.info/uploads/2301/filemanager/32c9eabd2bcc35b14b8b3474857ed908.png">
+            <div class=infotext>: 작업자 마커</div>
+            <img class=emerimg src="https://cdn.pixabay.com/photo/2015/11/12/13/33/first-aid-1040283_960_720.png">
+            <div class=infotext>: 위급 마커</div>
+            <img class=infoimg2 src="https://www.xpressengine.com/files/attach/images/19360728/495/402/019/1.gif">
+            <div class=infotext>: 유해가스 발생지점</div>
+            <img class=infoimg2 src="https://cdn.iconscout.com/icon/free/png-256/circle-geometric-red-round-37922.png">
+            <div class=infotext>: 가연성가스 발생지점</div>
+            <img class=infoimg2 src="https://upload.wikimedia.org/wikipedia/commons/1/17/Ski_trail_rating_symbol_blue_circle.png">
+            <div class=infotext>: 기타 위험 예상지점</div>
+            </div>
+
+            <!--대피버튼 생성-->
+            <input type = "button" id="myBtn" class="emergency" value = "대피버튼" onclick="emergency()">
+
+            <!--대피버튼 메세지 출력 창-->
+            <div id="myModal" class="modal">
+              <div id="modal-content" class="modal-content">
+                <span id="close" class="close">x</span>
+                <p>비상대피!! 모두 대피시키시오!!</p>
+              </div>
+            </div>
+
+            <div class='logHead'><a class='logHeader'>Problem list</a>
+              <input class="logbtn" type="button" value="더보기(새창)" onclick="movepage()"/>
+              <hr/></div>
+            <div id='log' class='log'>
+                </div>
+              <script>
+              function movepage(){
+                window.open("login__user/board","전체로그","width=700,height=400,left=600"
+
+)
+              }
+              setInterval(function(){
+                var date = new Date();
+                var hours = date.getHours();
+                var minutes = date.getMinutes();
+                var seconds = date.getSeconds();
+                if (hg == 1){
+                  $('#log').append(`<p class='logContent'><${hours < 10 ? `0${hours}` : hours}:${minutes <  10 ? `0${minutes}` : minutes }:${seconds < 10 ? `0${seconds}` : seconds}> 유해가스 발생지역 생성 (울산 컨테이너 하역장)`);
+                  hg=0;
+                }
+                if (fg == 1){
+                  $('#log').append(`<p class='logContent'><${hours < 10 ? `0${hours}` : hours}:${minutes <  10 ? `0${minutes}` : minutes }:${seconds < 10 ? `0${seconds}` : seconds}> 가연성가스 발생지역 생성 (울산 컨테이너 하역장)`);
+                  fg=0;
+                }
+                if (n == 1){
+                  $('#log').append(`<p class='logContent'><${hours < 10 ? `0${hours}` : hours}:${minutes <  10 ? `0${minutes}` : minutes }:${seconds < 10 ? `0${seconds}` : seconds}> 교통사고 위험지역 생성 (울산 컨테이너 하역장)`);
+                  n=0;
+                }
+                if (em == 1){
+                  $('#log').append(`<p class='logContent'><${hours < 10 ? `0${hours}` : hours}:${minutes <  10 ? `0${minutes}` : minutes }:${seconds < 10 ? `0${seconds}` : seconds}> 비상대피 실시`);
+                  em=0;
+                }
+                if((positions[0].HeartBeat >= 180)){
+                  if(wanning[0].hb==1){
+                    hb=0;
+                  }
+                  else{
+                    hb=1;
+                  }
+                  if (hb == 1){
+                    $('#log').append(`<p class='logContent'><${hours < 10 ? `0${hours}` : hours}:${minutes <  10 ? `0${minutes}` : minutes }:${seconds < 10 ? `0${seconds}` : seconds}> 1번 작업자 위급상태! (울산 컨테이너 하역장)`);
+                    hb=0;
+                  }
+                  wanning[0].hb=1;
+                }
+                var objDiv = document.getElementById("log");
+                objDiv.scrollTop = objDiv.scrollHeight;
+              }, 1000);
+              </script>
+
+              <script>
+                $(document).ready(function() {
+                  //1초마다 data.html 불러오기
+                  setInterval("Refresh_data()", 1000);
+                  //작업자 마커 배열, 작업자 위험상태 배열 초기화
+                  setTimeout(function(){
+                  for(var i = 0; i < positions.length; i++){
+                      marker[i] = new kakao.maps.Marker({
+                      id: i,
+                      map: map,
+                      position: positions[i].latlng,
+                      title: positions[i].title,
+                      clickable: true,
+                      image: markerImage,
+                      zIndex: 1
+                      });
+                    };
+
+                    for(var i = 0; i < marker.length; i++){
+                      wanning[i] = {
+                        title: "안전",
+                        harm: 0,
+                        fire: 0,
+                        new: 0,
+                        hb: 0
+                      }
+                    }
+                  }, 1000);
+                  //1초마다 new.html 불러오기
+                  setInterval("Refresh_new()", 1000);
+                  //작업자 정보 1초마다 불러오기
+                  setInterval(function(){
+                    if(click == true){
+                      num(click_id);
+                    }
+                  }, 1000);
+                });
+                
+                //
+                function Refresh_data(){
+                  $.ajax({
+                    type: "get",
+                    url: "./data.html",
+                    dataType: "html",
+                    async: false,
+                    success: function(data) {
+                      $("#data").html(data);
+                    },
+                    error: function(){
+                      alert("에러");
+                    }
+                  });
+                }
+                function Refresh_new(){
+                  $.ajax({
+                    type: "get",
+                    url: "./new.html",
+                    dataType: "html",
+                    async: false,
+                    success: function(data) {
+                      $("#new").html(data);
+                    },
+                    error: function(){
+                      alert("에러");
+                    }
+                  });
+                }
+
+                $(function() {
+                  $(document).ready(function() {
+
+                    $('#myBtn').click(function() {
+                      $("#myModal").css({
+                        "display": "block"
+                      });
+                    });
+                });
+              })
+              </script>
+     </body>
+     </html>
